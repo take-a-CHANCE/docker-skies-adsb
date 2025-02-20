@@ -1,0 +1,80 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash disable=SC1091,SC2154
+source /scripts/common
+
+"${s6wrap[@]}" echo "[INFO] Checking if Vector and Shapefiles are present"
+
+
+FAA_SHAPEFILE="${FAA_SHAPEFILE:-https://hub.arcgis.com/api/v3/datasets/c6a62360338e408cb1512366ad61559e_0/downloads/data?format=shp&spatialRefId=4269&where=1%3D1}"
+
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_admin_1_states_provinces.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_airports.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_urban_areas.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_admin_2_counties.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_roads.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_physical/ne_10m_lakes.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_physical/ne_10m_rivers_lake_centerlines.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/110m_cultural/ne_110m_admin_1_states_provinces.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/110m_physical/ne_110m_lakes.shp)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/110m_physical/ne_110m_rivers_lake_centerlines.shp)
+
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_admin_1_states_provinces.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_airports.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_urban_areas.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_admin_2_counties.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_cultural/ne_10m_roads.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_physical/ne_10m_lakes.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/10m_physical/ne_10m_rivers_lake_centerlines.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/110m_cultural/ne_110m_admin_1_states_provinces.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/110m_physical/ne_110m_lakes.shx)
+vector+=(https://raw.githubusercontent.com/nvkelso/natural-earth-vector/refs/heads/master/110m_physical/ne_110m_rivers_lake_centerlines.shx)
+
+while [[ ! -f /run/gis.installed.ok ]] && [[ ! -f /run/gis.installed.new ]]; do
+  sleep 1
+done
+
+if [[ -f /run/gis.installed.ok ]]; then
+  "${s6wrap[@]}" echo "[INFO] Vector and Shape Files are installed and valid. Skipping re-installation"
+  rm -f /run/gis.installed.ok
+  exit 0
+else
+  "${s6wrap[@]}" echo "[INFO] Need to download and install vector and shapefiles. This may take a while!"
+fi
+
+for v in "${vector[@]}"; do
+  dir="$(awk -F/ '{print $9}' <<<  "$v")"
+  if [[ ! -f "/skies-adsb/maps/data/$dir/${v##*/}" ]]; then
+  "${s6wrap[@]}" echo "[INFO] Downloading ${v##*/}"
+    mkdir -p "/skies-adsb/maps/data/$dir"
+    if ! curl -sSL "$v" -o "/skies-adsb/maps/data/$dir/${v##*/}"; then
+      "${s6wrap[@]}" echo "[ERROR] Couldn't download ${v##*/}. Cannot continue - container halted!"
+      rm -f "/skies-adsb/maps/data/$dir/${v##*/}"
+      #exec sleep infinity
+    fi
+  fi
+done
+
+if [[ ! -f /skies-adsb/maps/data/Class_Airspace.zip ]]; then
+  "${s6wrap[@]}" echo "[INFO] Downloading Class_Airspace.zip"
+  if ! curl -sSL "${FAA_SHAPEFILE}" -o /skies-adsb/maps/data/Class_Airspace.zip; then
+    "${s6wrap[@]}" echo "[ERROR] Couldn't download 10m Class Airspace Shapefile from ${FAA_SHAPEFILE}"
+    rm -f /skies-adsb/maps/data/Class_Airspace.zip
+  else
+    "${s6wrap[@]}" echo "[INFO] Unpacking Class_Airspace.zip"
+    unzip -qq -d /skies-adsb/maps/data/Class_Airspace /skies-adsb/maps/data/Class_Airspace.zip
+  fi
+fi
+
+"${s6wrap[@]}" echo "[INFO] Building Map Layers"
+cd /skies-adsb/maps || true
+sed -i 's|10m_cultural/10m_cultural|10m_cultural|g' build-map-layers.py # needed to make this work -- weirdness in py file
+sed -i 's|^python3 build-map-layers.py|python3 -u build-map-layers.py|g' ./build-map-layers.sh # make sure Python flushes buffers
+if ! "${s6wrap[@]}" stdbuf -oL ./build-map-layers.sh; then
+"${s6wrap[@]}" echo "[ERROR] Building Map Layers failed. Cannot continue - container halted!"
+  exec sleep infinity
+fi
+
+rm /run/gis.installed.new
+touch /run/gis.installed.ok
+
+"${s6wrap[@]}" echo "[INFO] Installation of vector and shapefiles was successful"
