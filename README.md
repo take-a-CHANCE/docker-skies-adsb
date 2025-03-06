@@ -4,6 +4,7 @@
 
 - [docker-skies-adsb](#docker-skies-adsb)
   - [Introduction](#introduction)
+  - [Status of this container](#status-of-this-container)
   - [Installation](#installation)
   - [Configuration](#configuration)
     - [Parameter configuration](#parameter-configuration)
@@ -14,6 +15,16 @@
 ## Introduction
 
 This container is a wrapper for [skies-adsb](https://github.com/machineinteractive/skies-adsb), which is incorporated herein. It exposes basic functions only. For documentation on what this container does, please follow the link above.
+
+## Status of this container
+
+I implemented this container as a "science project"; mainly to help satisfy the curiosity of several members of the [SDR-Enthusiasts group on Discord](https://discord.gg/zpwX2Y6zUK). The idea was to evaluate Skies-ADSB in a containerized fashion, allowing the user to quickly launch (or abandon) Skies-ADSB on any Debian Linux machine, including Raspberry Pi and Linux PC.
+
+Based on user feedback, we'd then decide to "fully support", "park", "abandon" this container.
+
+After polling users, we have come to the conclusion that we'll "park" the effort for now. As such, this container is **fixed** using [Skies-ADSB tag 2.3.2](https://github.com/machineinteractive/skies-adsb/tree/7511ff934b02a90f1095c322e4b8b3d73bcc5d56), which ensures that the container will continue  to build and function for the foreseeable future. However, any improvements that follow v2.3.2 won't be included.
+
+If the interest increases (go to the [#skies-adsb](https://discord.gg/zpwX2Y6zUK) channel on the SDR-E Discord server to express your opinion), we can revisit this decision.
 
 ## Installation
 
