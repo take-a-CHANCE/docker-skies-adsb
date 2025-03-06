@@ -6,7 +6,8 @@ FROM ghcr.io/sdr-enthusiasts/docker-baseimage:base
 ENV BASH_ENV=/home/.bash_env \
     __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=true
 
-ARG BASH_ENV=/home/.bash_env 
+ARG BASH_ENV=/home/.bash_env \
+    SKIES_ADSB_BRANCH="2.3.2"    # tag 2.3.2 which is known to work
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 
@@ -49,7 +50,7 @@ RUN \
     nvm install || true && \
     nvm install node || true && \
     # Clone skies-adsb from github:
-    git clone --depth=1 https://github.com/machineinteractive/skies-adsb.git && \
+    git clone --depth=1 ${SKIES_ADSB_BRANCH:+--branch} ${SKIES_ADSB_BRANCH} https://github.com/machineinteractive/skies-adsb.git && \
     cd skies-adsb && \
     # Install stuff:
     npm install && \
