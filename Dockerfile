@@ -62,7 +62,7 @@ RUN \
     echo "alias nano=\"nano -l\"" >> /root/.bashrc && \
     # Add Container Version:
     repo="kx1t/docker-skies-adsb" && \
-    branch="dev" && \
+    branch="main" && \
     commit="$(curl -sSL -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/$repo/commits/$branch)" && \
     c_sha="$(sed -n 's|^\s*\"sha\":\s*\"\([0-9a-f]\{7\}\).*$|\1|p' <<< "$commit" | head -n 1)" && \
     c_date="$(sed -n 's|^\s*\"date\":\s*\"\([^\"]*\).*$|\1|p' <<< "$commit" | head -n 1)" && \

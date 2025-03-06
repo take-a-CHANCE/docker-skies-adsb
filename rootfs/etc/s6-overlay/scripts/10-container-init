@@ -21,29 +21,29 @@ if [[ -f /skies-adsb/maps/data/.env ]]; then cp -f /skies-adsb/maps/data/.env /s
 
 source /skies-adsb/src/.env
 if [[ -f /skies-adsb/public/map-data/aerodromes.geojson ]] && \
-   [[ "$VITE_DEFAULT_ORIGIN_LATITUDE" == "$LAT" ]] && \
-	 [[ "$VITE_DEFAULT_ORIGIN_LONGITUDE" == "${LON:-$LONG}" ]]; then 
+   [[ "$SKIES_ADSB_DEFAULT_ORIGIN_LATITUDE" == "$LAT" ]] && \
+	 [[ "$SKIES_ADSB_DEFAULT_ORIGIN_LONGITUDE" == "${LON:-$LONG}" ]]; then 
 	touch /run/gis.installed.ok
 fi
 
 # configure SBS source
-if grep -qe '^VITE_USE_EXISTING_ADSB=.*$' /skies-adsb/src/.env ; then
-	sed -i 's|^\(VITE_USE_EXISTING_ADSB=\).*$|\1'"$SBS_SOURCE"'|g' /skies-adsb/src/.env
+if grep -qe '^SKIES_ADSB_USE_EXISTING_ADSB=.*$' /skies-adsb/src/.env ; then
+	sed -i 's|^\(SKIES_ADSB_USE_EXISTING_ADSB=\).*$|\1'"$SBS_SOURCE"'|g' /skies-adsb/src/.env
 else
-	echo "VITE_USE_EXISTING_ADSB=$SBS_SOURCE" >> /skies-adsb/src/.env
+	echo "SKIES_ADSB_USE_EXISTING_ADSB=$SBS_SOURCE" >> /skies-adsb/src/.env
 fi
 
 # configure lat/lon
 # write coords to env file:
-if grep -qe '^VITE_DEFAULT_ORIGIN_LATITUDE=.*$' /skies-adsb/src/.env ; then
-	sed -i 's|^\(VITE_DEFAULT_ORIGIN_LATITUDE=\).*$|\1'"$LAT"'|g' /skies-adsb/src/.env
+if grep -qe '^SKIES_ADSB_DEFAULT_ORIGIN_LATITUDE=.*$' /skies-adsb/src/.env ; then
+	sed -i 's|^\(SKIES_ADSB_DEFAULT_ORIGIN_LATITUDE=\).*$|\1'"$LAT"'|g' /skies-adsb/src/.env
 else
-	echo "VITE_DEFAULT_ORIGIN_LATITUDE=$LAT" >> /skies-adsb/src/.env
+	echo "SKIES_ADSB_DEFAULT_ORIGIN_LATITUDE=$LAT" >> /skies-adsb/src/.env
 fi
-if grep -qe '^VITE_DEFAULT_ORIGIN_LONGITUDE=.*$' /skies-adsb/src/.env ; then
-	sed -i 's|^\(VITE_DEFAULT_ORIGIN_LONGITUDE=\).*$|\1'"${LON:-$LONG}"'|g' /skies-adsb/src/.env
+if grep -qe '^SKIES_ADSB_DEFAULT_ORIGIN_LONGITUDE=.*$' /skies-adsb/src/.env ; then
+	sed -i 's|^\(SKIES_ADSB_DEFAULT_ORIGIN_LONGITUDE=\).*$|\1'"${LON:-$LONG}"'|g' /skies-adsb/src/.env
 else
-	echo "VITE_DEFAULT_ORIGIN_LONGITUDE=${LON:-$LONG}" >> /skies-adsb/src/.env
+	echo "SKIES_ADSB_DEFAULT_ORIGIN_LONGITUDE=${LON:-$LONG}" >> /skies-adsb/src/.env
 fi
 
 cp -f /skies-adsb/src/.env /skies-adsb/maps/data/.env
@@ -58,6 +58,7 @@ export default defineConfig({
         outDir: '../dist',
     },
     publicDir: '../public',
+		envPrefix: 'SKIES_ADSB_',
     server: {
       allowedHosts: true,
 			strictPort: true,
