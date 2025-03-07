@@ -7,7 +7,7 @@ ENV BASH_ENV=/home/.bash_env \
     __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=true
 
 ARG BASH_ENV=/home/.bash_env \
-    SKIES_ADSB_BRANCH="2.3.2"    # tag 2.3.2 which is known to work
+    SKIES_ADSB_BRANCH="2.4.0"    # tag 2.3.2 which is known to work
 
 SHELL ["/bin/bash", "-x", "-o", "pipefail", "-c"]
 
